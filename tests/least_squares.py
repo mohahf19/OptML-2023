@@ -18,7 +18,7 @@ X = scaler.fit_transform(X)
 # Set the hyperparameters
 n_epochs = 50
 n_steps = n_epochs*X.shape[0]
-learning_rate = 0.01
+learning_rate = 0.001
 
 # Initialize the weights
 n_features = X.shape[1]
