@@ -32,9 +32,11 @@ lr_accuracy = accuracy_score(y_test, lr_preds)
 w_init = np.zeros(X.shape[1])
 learning_rate = 0.1
 n_epochs = 50
+#each epoch SGD algorithm iterates on all the data points; to have a comparable number of step with SAGA 
+#we need to multiply the number of epochs for the number of data points
 n_steps = X.shape[0]*n_epochs
 
-# Train the model using the custom SAGA algorithm
+# Train the model using the SAGA algorithm
 w_saga, obj_saga = algorithms.saga(X_train, y_train, w_init, learning_rate, n_steps, logistic_loss, logistic_loss_gradient)
 
 # Make predictions on the test set using the trained SAGA model
