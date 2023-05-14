@@ -1,24 +1,25 @@
-import numpy as np
 import random as rnd
 from sys import stdout
 
-def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size = 1):
+import numpy as np
+
+
+def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size=1):
     n_samples, n_features = X.shape
     obj_vals = []
-    
+
     # Initialize gradients storage
     # Row i of gradients_memory contains the gradient of the i-th function
-    gradients_memory = 2 * X *np.expand_dims(X @ w_init - y, axis=1)
+    gradients_memory = 2 * X * np.expand_dims(X @ w_init - y, axis=1)
     gradient_averages = np.mean(gradients_memory, axis=0)
 
     # Initialize weights
     w = w_init.copy()
 
     for step in range(n_steps):
-        
         # choose uniformly random index
-        index = rnd.randint(0, n_samples-1)
-        X_sample = np.expand_dims(X[index], axis = 0)
+        index = rnd.randint(0, n_samples - 1)
+        X_sample = np.expand_dims(X[index], axis=0)
         y_sample = y[index]
 
         # Compute the gradients for the current batch
@@ -28,11 +29,11 @@ def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size
         w -= gamma * (gradients_batch - gradients_memory[index] + gradient_averages)
 
         # Update the old gradients with the current gradients
-        gradient_averages -= gradients_memory[index]/n_samples
-        gradient_averages += gradients_batch/n_samples
+        gradient_averages -= gradients_memory[index] / n_samples
+        gradient_averages += gradients_batch / n_samples
         gradients_memory[index] = gradients_batch.copy()
-        
-         # Compute the objective function value for the current epoch
+
+        # Compute the objective function value for the current epoch
         obj_val = objective(X, y, w)
         obj_vals.append(obj_val)
         if step % (n_steps // 100) == 0:
@@ -40,8 +41,7 @@ def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size
     return w, obj_vals
 
 
-
-def sgd(X, y, w_init, gamma, n_epochs, objective, objective_gradient, batch_size = 1):
+def sgd(X, y, w_init, gamma, n_epochs, objective, objective_gradient, batch_size=1):
     n_samples, n_features = X.shape
     n_batches = n_samples // batch_size
     print(n_batches)
