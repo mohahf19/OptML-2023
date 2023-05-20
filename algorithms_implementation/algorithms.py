@@ -75,3 +75,55 @@ def sgd(X, y, w_init, gamma, n_epochs, objective, objective_gradient, batch_size
         print(f"Epoch {epoch+1}/{n_epochs} - Objective Value: {obj_val:.4f}")
 
     return w, obj_vals
+
+
+def q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q, batch_size = 1):
+    
+    n_samples, n_features = X.shape
+    obj_vals = []
+
+    # Initialize gradients storage
+    # Row i of gradients_memory contains the gradient of the i-th function
+    gradients_memory = 2 * X *np.expand_dims(X @ w_init - y, axis=1)
+    gradient_averages = np.mean(gradients_memory, axis=0)
+
+    # Initialize weights
+    w = w_init.copy()
+
+    for step in range(n_steps):
+        
+        # choose uniformly random indices to update memory table
+        indices = rnd.sample(range(0, n_samples), q)
+        X_sample_grad = np.expand_dims(X[indices], axis = 0)
+        y_sample_grad = y[indices]
+
+        #choose uniformely random index to perform SGD step with noise
+        index = np.random.randint(0, len(indices)-1)
+        X_sample = np.expand_dims(X[indices[index]], axis = 0)
+        y_sample = y[indices[index]]
+
+        # Compute the gradient for the SGD step
+        gradients_batch_sgd = objective_gradient(X_sample, y_sample, w)
+
+        #copy by value of w to perform the memory table update
+        w_old = w.copy()
+
+        # Update the weights
+        w -= gamma * (gradients_batch_sgd - gradients_memory[indices] + gradient_averages)
+
+        # Update the old gradients with the current gradients
+        for i in indices:
+            
+            gradients_batch_mem = objective_gradient(X_sample_grad[i], y_sample_grad[i], w_old)
+            
+            gradient_averages -= gradients_memory[i]/n_samples
+            gradient_averages += gradients_batch_mem/n_samples
+            gradients_memory[i] = gradients_batch_mem.copy()
+            
+         # Compute the objective function value for the current epoch
+        obj_val = objective(X, y, w)
+        obj_vals.append(obj_val)
+        if step % (n_steps // 100) == 0:
+            print(f"Step {step+1}/{n_steps} - Objective Value: {obj_val:.4f}")
+    
+    return w, obj_vals

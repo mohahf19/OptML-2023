@@ -34,6 +34,12 @@ print("\nSAGA:")
 w_saga, obj_saga = algorithms.saga(X, y, w_init, learning_rate, n_steps, least_square_loss, least_square_loss_gradient)
 print("SAGA weights:", w_saga)
 
+# # Perform q_SAGA
+print("\nSAGA:")
+q = 2
+w_q_saga, obj_q_saga = algorithms.saga(X, y, w_init, learning_rate, n_steps, least_square_loss, least_square_loss_gradient, q)
+print("SAGA weights:", w_saga)
+
 
 
 # Plotting the results
