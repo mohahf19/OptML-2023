@@ -87,8 +87,8 @@ sgd_accuracy = accuracy_score(y_test, sgd_preds)
 
 # Perform q_SAGA
 print("\nQ-SAGA:")
-q = 1
-w_q_saga, obj_q_saga = algorithms.saga(
+q = 5
+w_q_saga, obj_q_saga = algorithms.q_saga(
     X,
     y,
     w_init,
