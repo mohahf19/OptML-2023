@@ -87,6 +87,7 @@ sgd_accuracy = accuracy_score(y_test, sgd_preds)
 
 # Perform q_SAGA
 print("\nQ-SAGA:")
+# q is the number of updates in the memory table
 q = 5
 w_q_saga, obj_q_saga = algorithms.q_saga(
     X,
@@ -104,6 +105,26 @@ q_saga_preds = np.sign(X_test.dot(w_q_saga))
 # Calculate accuracy for SGD algorithm
 q_saga_accuracy = accuracy_score(y_test, q_saga_preds)
 
+# Perform q_SAGA
+print("\nBATCH Q-SAGA:")
+# q is both the number of sample to be used and the number of updates in the memory table
+q = 5
+w_batch_q_saga, obj_batch_q_saga = algorithms.batch_q_saga(
+    X,
+    y,
+    w_init,
+    learning_rate,
+    n_steps,
+    logistic_loss,
+    logistic_loss_gradient, q)
+print("BATCH Q-SAGA weights:", w_batch_q_saga)
+
+# Make predictions on the test set using the trained SGD model
+batch_q_saga_preds = np.sign(X_test.dot(w_batch_q_saga))
+
+# Calculate accuracy for SGD algorithm
+batch_q_saga_accuracy = accuracy_score(y_test, batch_q_saga_preds)
+
 
 
 # Print the accuracies
@@ -111,11 +132,13 @@ print("Logistic Regression Accuracy: {:.4f}".format(lr_accuracy))
 print("SAGA Accuracy: {:.4f}".format(saga_accuracy))
 print("SGD Accuracy: {:.4f}".format(sgd_accuracy))
 print("Q-SAGA Accuracy: {:.4f}".format(q_saga_accuracy))
+print("BATCH Q-SAGA Accuracy: {:.4f}".format(batch_q_saga_accuracy))
 
 # Plotting the results
 plt.plot(range(len(obj_sgd)), obj_sgd, label="SGD")
 plt.plot(range(len(obj_saga)), obj_saga, label="SAGA")
 plt.plot(range(len(obj_q_saga)), obj_q_saga, label="Q-SAGA")
+plt.plot(range(len(obj_batch_q_saga)), obj_batch_q_saga, label="BATCH Q-SAGA")
 
 plt.xlabel("Step")
 plt.ylabel("Loss")

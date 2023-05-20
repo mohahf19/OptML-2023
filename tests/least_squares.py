@@ -32,7 +32,7 @@ w_sgd, obj_sgd = algorithms.sgd(
 )
 print("SGD weights:", w_sgd)
 
-# # Perform SAGA
+# Perform SAGA
 print("\nSAGA:")
 w_saga, obj_saga = algorithms.saga(
     X, y, w_init, learning_rate, n_steps, least_square_loss, least_square_loss_gradient
@@ -41,12 +41,14 @@ print("SAGA weights:", w_saga)
 
 # Perform q_SAGA
 print("\nQ-SAGA:")
+# q is the number of rows updates in the memory table
 q = 10
 w_q_saga, obj_q_saga = algorithms.q_saga(X, y, w_init, learning_rate, n_steps, least_square_loss, least_square_loss_gradient, q)
 print("Q-SAGA weights:", w_q_saga)
 
 # Perform batch_q_SAGA
 print("\nBATCH Q-SAGA:")
+# q is both the number of sample to be used and the number of updates in the memory table
 q = 10
 w_batch_q_saga, obj_batch_q_saga = algorithms.batch_q_saga(X, y, w_init, learning_rate, n_steps, least_square_loss, least_square_loss_gradient, q)
 print("Q-SAGA weights:", w_batch_q_saga)
