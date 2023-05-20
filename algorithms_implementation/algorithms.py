@@ -96,7 +96,7 @@ def q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q, batch
         indices = rnd.sample(range(0, n_samples), q)
         X_sample_grad = np.expand_dims(X[indices], axis = 0)
         y_sample_grad = y[indices]
-
+        
         #choose uniformely random index to perform SGD step with noise
         index = np.random.randint(0, len(indices)-1)
         X_sample = np.expand_dims(X[indices[index]], axis = 0)
@@ -109,7 +109,7 @@ def q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q, batch
         w_old = w.copy()
 
         # Update the weights
-        w -= gamma * (gradients_batch_sgd - gradients_memory[indices] + gradient_averages)
+        w -= gamma * (gradients_batch_sgd - gradients_memory[indices[index]] + gradient_averages)
 
         # Update the old gradients with the current gradients
         for i in indices:

@@ -39,16 +39,17 @@ w_saga, obj_saga = algorithms.saga(
 )
 print("SAGA weights:", w_saga)
 
-# # Perform q_SAGA
-print("\nSAGA:")
-q = 2
+# Perform q_SAGA
+print("\nQ-SAGA:")
+q = 100
 w_q_saga, obj_q_saga = algorithms.saga(X, y, w_init, learning_rate, n_steps, least_square_loss, least_square_loss_gradient, q)
-print("SAGA weights:", w_saga)
+print("Q-SAGA weights:", w_q_saga)
 
 
 # Plotting the results
 plt.semilogy(range(len(obj_sgd)), obj_sgd, label="SGD")
 plt.semilogy(range(len(obj_saga)), obj_saga, label="SAGA")
+plt.semilogy(range(len(obj_q_saga)), obj_q_saga, label="Q-SAGA")
 
 plt.xlabel("Step")
 plt.ylabel("Loss")
