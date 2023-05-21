@@ -11,7 +11,7 @@ def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size
 
     # Initialize gradients storage
     # Row i of gradients_memory contains the gradient of the i-th function
-    gradients_memory = objective_gradient(X, y, w_init)
+    gradients_memory = objective_gradient(X, y, w_init, point_wise = True)
     gradient_averages = np.mean(gradients_memory, axis=0)
 
     # Initialize weights
