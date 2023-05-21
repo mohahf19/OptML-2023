@@ -1,5 +1,6 @@
 import random as rnd
 from sys import stdout
+import copy
 
 import numpy as np
 
@@ -10,11 +11,11 @@ def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size
 
     # Initialize gradients storage
     # Row i of gradients_memory contains the gradient of the i-th function
-    gradients_memory = 2 * X * np.expand_dims(X @ w_init - y, axis=1)
+    gradients_memory = objective_gradient(X, y, w_init)
     gradient_averages = np.mean(gradients_memory, axis=0)
 
     # Initialize weights
-    w = w_init.copy()
+    w = copy.deepcopy(w_init)
 
     for step in range(n_steps):
         # choose uniformly random index
@@ -30,7 +31,7 @@ def saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, batch_size
         # Update the old gradients with the current gradients
         gradient_averages -= gradients_memory[index] / n_samples
         gradient_averages += gradients_batch / n_samples
-        gradients_memory[index] = gradients_batch.copy()
+        gradients_memory[index] = copy.deepcopy(gradients_batch)
 
         # Compute the objective function value for the current epoch
         obj_val = objective(X, y, w)
@@ -47,7 +48,7 @@ def sgd(X, y, w_init, gamma, n_epochs, objective, objective_gradient, batch_size
     obj_vals = []
 
     # Initialize weights
-    w = w_init.copy()
+    w = copy.deepcopy(w_init)
 
     for epoch in range(n_epochs):
         # Shuffle the data
@@ -83,11 +84,11 @@ def q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q, batch
 
     # Initialize gradients storage
     # Row i of gradients_memory contains the gradient of the i-th function
-    gradients_memory = 2 * X *np.expand_dims(X @ w_init - y, axis=1)
+    gradients_memory = objective_gradient(X, y, w_init)
     gradient_averages = np.mean(gradients_memory, axis=0)
 
     # Initialize weights
-    w = w_init.copy()
+    w = copy.deepcopy(w_init)
 
     for step in range(n_steps):
         
@@ -106,7 +107,7 @@ def q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q, batch
         gradients_batch_sgd = objective_gradient(X_sample, y_sample, w)
 
         #copy by value of w to perform the memory table update
-        w_old = w.copy()
+        w_old = copy.deepcopy(w)
         # Update the weights
         w -= gamma * (gradients_batch_sgd - gradients_memory[indices[index]] + gradient_averages)
 
@@ -117,7 +118,7 @@ def q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q, batch
             
             gradient_averages -= gradients_memory[i]/n_samples
             gradient_averages += gradients_batch_mem/n_samples
-            gradients_memory[i] = gradients_batch_mem.copy()
+            gradients_memory[i] = copy.deepcopy(gradients_batch_mem)
             
          # Compute the objective function value for the current epoch
         obj_val = objective(X, y, w)
@@ -135,11 +136,11 @@ def batch_q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q,
 
     # Initialize gradients storage
     # Row i of gradients_memory contains the gradient of the i-th function
-    gradients_memory = 2 * X *np.expand_dims(X @ w_init - y, axis=1)
+    gradients_memory = objective_gradient(X, y, w_init)
     gradient_averages = np.mean(gradients_memory, axis=0)
 
     # Initialize weights
-    w = w_init.copy()
+    w = copy.deepcopy(w_init)
 
     for step in range(n_steps):
         
@@ -157,7 +158,7 @@ def batch_q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q,
             
 
         #copy by value of w to perform the memory table update
-        w_old = w.copy()
+        w_old = copy.deepcopy(w)
 
         # Update the weights
         w -= gamma * (np.mean(gradients_batch, axis = 0) - np.mean(gradients_memory[indices,:], axis = 0) + gradient_averages)
@@ -166,7 +167,7 @@ def batch_q_saga(X, y, w_init, gamma, n_steps, objective, objective_gradient, q,
         # Update the old gradients with the current gradients
         gradient_averages -= np.sum(gradients_memory[indices, :], axis = 0)/n_samples
         gradient_averages += np.sum(gradients_batch, axis = 0) /n_samples
-        gradients_memory[indices,:] = gradients_batch.copy()
+        gradients_memory[indices,:] = copy.deepcopy(gradients_batch)
             
 
          # Compute the objective function value for the current epoch
