@@ -16,3 +16,4 @@ dependencies:
   - tqdm
   - pytorch
   - pandas
+  - torchvision
