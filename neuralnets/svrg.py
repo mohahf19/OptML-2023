@@ -6,11 +6,12 @@ from torch.optim.optimizer import Optimizer, required
 
 
 class SVRG(Optimizer):
+
     def __init__(self, params, prob, nn, loss_func, data_loader, device, lr=required):
         defaults = {"lr": lr}
-        super().__init__(params, defaults)
+        self.params = list(params)
+        super().__init__(self.params, defaults)
 
-        self.params = params
         self.lr = lr
         self.nn_temp = nn  # stored snapshot neural networ, i.e. store the weight
         self.grad_avg = []  # full gradient at stored snapshot weight
@@ -28,11 +29,10 @@ class SVRG(Optimizer):
 
     def step(self, x, y, closure=None):
         var_red = self.variance_reduction_stoch_grad(x, y)
-
-        for p in self.params:
-            var_red = self.nn_temp.parameters[p]
-            update = p.grad - var_red
-            p = p - self.lr * update
+        
+        for p, var_red_term in zip(self.params, var_red):
+            update = p.grad - var_red_term
+            p.data = p.data - self.lr * update
 
         if np.random.rand() <= self.prob:  # coin flip
             self.take_snapshot()

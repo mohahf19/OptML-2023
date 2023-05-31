@@ -26,7 +26,7 @@ criterion = torch.nn.CrossEntropyLoss()
 
 optimizer = SVRG(
     network.parameters(),
-    lr=0.001,
+    lr=0.1,
     prob=1 / np.sqrt(len(train_loader.dataset)),
     nn=network_temp,
     loss_func=criterion,
