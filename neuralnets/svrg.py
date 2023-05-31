@@ -54,6 +54,7 @@ class SVRG(Optimizer):
         return grad_list
 
     def take_snapshot(self):
+        print("Taking snapshot..")
         # update snapshot
         for p_local, p_temp in zip(self.params, self.nn_temp.parameters()):
             p_temp = deepcopy(p_local)

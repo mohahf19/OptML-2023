@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 import torchinfo
 from cnn import CNN
@@ -36,3 +38,6 @@ network_temp.load_state_dict(network.state_dict())
 
 
 print(torchinfo.summary(network))
+
+output_dir = Path("output")
+output_dir.mkdir(exist_ok=True, parents=True)
