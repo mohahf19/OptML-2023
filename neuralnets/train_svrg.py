@@ -1,18 +1,36 @@
 # Get MNIST data
 
+import numpy as np
 import torch
 from cnn import CNN
-from config import batch_size, device, network, num_epochs, test_loader, train_loader, network_temp, train_loader_temp
+from config import (
+    batch_size,
+    device,
+    network,
+    network_temp,
+    num_epochs,
+    test_loader,
+    train_loader,
+    train_loader_temp,
+)
 from svrg import SVRG
 from tqdm import tqdm
-import numpy as np
 
 network.to(device)
 network_temp.to(device)
 
 criterion = torch.nn.CrossEntropyLoss()
 
-optimizer = SVRG(network.parameters(), lr=0.1, prob=1/np.sqrt(len(train_loader.dataset)), nn=network_temp, loss_func=criterion, data_loader=train_loader_temp, device=device)
+optimizer = SVRG(
+    network.parameters(),
+    lr=0.1,
+    prob=1 / np.sqrt(len(train_loader.dataset)),
+    nn=network_temp,
+    loss_func=criterion,
+    data_loader=train_loader_temp,
+    device=device,
+)
+
 
 def train_epoch(device: str = "cpu"):
     network.train()
@@ -23,7 +41,7 @@ def train_epoch(device: str = "cpu"):
         output = network(data)
         loss = criterion(output, target)
         loss.backward()
-        optimizer.step()
+        optimizer.step(x=data, y=target)
         running_loss += loss.item()
     return running_loss / len(train_loader)
 

@@ -29,7 +29,9 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 train_loader_temp = torch.utils.data.DataLoader(train_dataset, batch_size=256)
 
 network = CNN(num_channels=1, num_classes=torch.unique(train_dataset.targets).shape[0])
-network_temp = CNN(num_channels=1, num_classes=torch.unique(train_dataset.targets).shape[0])
+network_temp = CNN(
+    num_channels=1, num_classes=torch.unique(train_dataset.targets).shape[0]
+)
 network_temp.load_state_dict(network.state_dict())
 
 
