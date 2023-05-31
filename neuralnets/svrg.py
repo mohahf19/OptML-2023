@@ -45,7 +45,7 @@ class SVRG(Optimizer):
         # recompute gradient at sampled data point
         outputs = self.nn_temp(x)
         loss = self.loss_func(outputs, y)
-        loss.backwards()
+        loss.backward()
 
         grad_list = []
         for p, g_avg in zip(self.nn_temp.parameters(), self.grad_avg):
@@ -69,7 +69,7 @@ class SVRG(Optimizer):
 
             output = self.nn_temp(data)
             loss = self.loss_func(output, labels)
-            loss.backwards()
+            loss.backward()
 
         # copy full gradient
         self.grad_avg = []
