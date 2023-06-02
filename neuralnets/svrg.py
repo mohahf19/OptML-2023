@@ -58,20 +58,20 @@ class SVRG(Optimizer):
         # update snapshot
         for p_local, p_temp in zip(self.params, self.nn_temp.parameters()):
             p_temp = deepcopy(p_local)
-
         # zeroing the gradients
         for p in self.nn_temp.parameters():
             p.grad = None
 
         # compute full gradient at snapshot point
         self.nn_temp = self.nn_temp.to(self.device)
-        for data, labels in self.data_loader:
-            data, labels = data.to(self.device), labels.to(self.device)
+        i = 0
+        for (data, labels) in self.data_loader:
+            #data, labels = data.to(self.device), labels.to(self.device)
 
             output = self.nn_temp(data)
             loss = self.loss_func(output, labels)
             loss.backward()
-
+        
         # copy full gradient
         self.grad_avg = []
         for p in self.nn_temp.parameters():

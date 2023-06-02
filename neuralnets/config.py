@@ -4,6 +4,7 @@ import torch
 import torchinfo
 from cnn import CNN
 from torchvision import datasets, transforms
+import copy
 
 
 def get_data():
@@ -24,11 +25,11 @@ def get_data():
 train_dataset, test_dataset = get_data()
 batch_size = 1
 num_epochs = 100
-device = "mps"
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
+device = "cpu"
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
-train_loader_temp = torch.utils.data.DataLoader(train_dataset, batch_size=256)
+train_loader_temp = torch.utils.data.DataLoader(test_dataset, batch_size=len(train_loader.dataset), shuffle=True)
 
 network = CNN(num_channels=1, num_classes=torch.unique(train_dataset.targets).shape[0])
 network_temp = CNN(
