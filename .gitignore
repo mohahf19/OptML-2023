@@ -163,3 +163,5 @@ datasets/year/
 datasets/cov/
 datasets/ijcnn1
 .DS_Store
+
+**.pt

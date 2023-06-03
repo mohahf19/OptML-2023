@@ -1,34 +1,42 @@
 # Get MNIST data
 
+import pickle
+from pathlib import Path
+
 import torch
-from cnn import CNN
-from config import batch_size, device, network, num_epochs, test_loader, train_loader
-from saga import SAGA
+from config import (
+    device,
+    network,
+    num_steps,
+    output_dir,
+    test_every_n_steps,
+    test_loader,
+    train_loader,
+)
 from tqdm import tqdm
+from utils import visualize_losses
 
 network.to(device)
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(network.parameters(), lr=0.1)
+optimizer = torch.optim.SGD(network.parameters(), lr=0.001)
 
 
-def train_epoch(device: str = "cpu"):
+def train_step(device: str = "cpu"):
     network.train()
-    running_loss = 0.0
-    for data, target in tqdm(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = network(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-    return running_loss / len(train_loader)
+    data, target, _ = next(iter(train_loader))
+    data, target = data.to(device), target.to(device)
+    output = network(data)
+    optimizer.zero_grad()
+    loss = criterion(output, target)
+    loss.backward()
+    optimizer.step()
+    return loss.item()
 
 
 def test(device: str = "cpu"):
     network.train(False)
     running_loss = 0.0
-    for data, target in test_loader:
+    for data, target, _ in test_loader:
         data, target = data.to(device), target.to(device)
         output = network(data)
         loss = criterion(output, target)
@@ -36,30 +44,39 @@ def test(device: str = "cpu"):
     return running_loss / len(test_loader)
 
 
-def compute_entire_gradient(network: CNN, criterion, device: str = "cpu"):
-    print("Computing entire gradient..")
-    for data, target in tqdm(train_loader):
-        data, target = data.to(device), target.to(device)
-        output = network(data)
-        loss = criterion(output, target)
-        loss.backward()
-
-    for param in network.parameters():
-        param.grad /= len(train_loader)
-
-
-def train(num_epochs: int = 10, device: str = "cpu"):
+def train(weights_folder: Path, num_steps: int = 1, device: str = "cpu"):
     tr_losses = []
     val_losses = []
-    for epoch in range(num_epochs):
-        train_loss = train_epoch(device)
-        test_loss = test(device)
-        tr_losses.append(train_loss)
-        val_losses.append(test_loss)
-        print(f"Epoch: {epoch}, Train Loss: {train_loss}, Test Loss: {test_loss}")
-    print(tr_losses)
-    print(val_losses)
+    torch.save(network.state_dict(), weights_folder / "initial_weights.pt")
+    for step in tqdm(range(num_steps)):
+        train_loss = train_step(device)
+        tr_losses.append((step, train_loss))
+        if step % test_every_n_steps == 0:
+            torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
+            val_loss = test(device)
+            val_losses.append((step, val_loss))
+            print(f"Step: {step}, Train Loss: {train_loss}, Test Loss: {val_loss}")
+
+    return tr_losses, val_losses
 
 
+output_dir = output_dir / "sgd"
+output_dir.mkdir(exist_ok=True, parents=True)
+
+weights_dir = output_dir / "weights"
+weights_dir.mkdir(exist_ok=True, parents=True)
 print("Started training..")
-train(num_epochs=num_epochs, device="mps")
+tr_losses, val_losses = train(
+    weights_folder=weights_dir, num_steps=num_steps, device=device
+)
+
+with open(output_dir / "results.pkl", "wb") as f:
+    pickle.dump({"train": tr_losses, "val": val_losses}, f)
+
+vis_path = output_dir / "loss.png"
+visualize_losses(
+    output_path=str(vis_path),
+    tr_losses=tr_losses,
+    val_losses=val_losses,
+    title="SGD Losses",
+)
