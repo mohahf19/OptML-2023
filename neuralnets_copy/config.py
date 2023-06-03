@@ -24,7 +24,7 @@ def get_data():
 
 train_dataset, test_dataset = get_data()
 num_epochs = 100
-device = "mps"
+device = "cpu"
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=len(train_dataset), shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=len(train_dataset), shuffle=True)
 
