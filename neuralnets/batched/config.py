@@ -41,18 +41,18 @@ torch.backends.mps.deterministic = True
 np.random.seed(seed)
 
 train_dataset, test_dataset = get_data()
-batch_size = 128
+batch_size_c = 128
 batch_full_grads = 2**20
-num_epochs = 250
-test_every_x_steps = (len(train_dataset)//batch_size)//10
+num_epochs_c = 250
+test_every_x_steps_c = (len(train_dataset)//batch_size_c)//10
 
-device = "mps"
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-test_loader = torch.utils.data.DataLoader(
+device_c = "mps"
+train_loader_c = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_c, shuffle=True)
+test_loader_c = torch.utils.data.DataLoader(
     test_dataset, batch_size=batch_full_grads, shuffle=True
 )
 
-train_loader_temp = torch.utils.data.DataLoader(
+train_loader_temp_c = torch.utils.data.DataLoader(
     train_dataset, batch_size=batch_full_grads, shuffle=True
 )
 
@@ -60,9 +60,9 @@ train_loader_temp = torch.utils.data.DataLoader(
 # data, target, index = next(iter(train_loader_temp))
 # print(data.shape, target.shape, index)
 
-network = LeNet(normbatch=True)
-network_temp = LeNet(normbatch=True)
-network_temp.load_state_dict(network.state_dict())
+network_c = LeNet(normbatch=True)
+network_temp_c = LeNet(normbatch=True)
+network_temp_c.load_state_dict(network_c.state_dict())
 
-output_dir = Path("output")
-output_dir.mkdir(exist_ok=True, parents=True)
+output_dir_c = Path("output")
+output_dir_c.mkdir(exist_ok=True, parents=True)
