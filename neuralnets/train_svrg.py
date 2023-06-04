@@ -1,11 +1,9 @@
-# Get MNIST data
-
-
 import pickle
+from collections.abc import Iterator
 from pathlib import Path
-
 import numpy as np
 import torch
+
 from config import (
     device,
     network,
@@ -36,16 +34,15 @@ optimizer = SVRG(
     device=device,
 )
 
-
 def tensor_to_arr_or_scalar(tensor: torch.Tensor) -> np.ndarray | float:
     if tensor.numel() == 1:
         return tensor.item()
     return tensor.detach().cpu().numpy()
 
 
-def train_step(device: str = "cpu"):
+def train_step(tr_loader_iterator: Iterator, device: str = "cpu"):
     network.train()
-    data, target, indices = next(iter(train_loader))
+    data, target, indices = next(tr_loader_iterator)
     data, target = data.to(device), target.to(device)
     output = network(data)
     optimizer.zero_grad()
@@ -53,7 +50,6 @@ def train_step(device: str = "cpu"):
     loss.backward()
     took_snapshot = optimizer.step(x=data, y=target)
     return loss.item(), took_snapshot, indices
-
 
 def test(device: str = "cpu"):
     network.train(False)
@@ -83,10 +79,19 @@ def train(weights_folder: Path, num_steps: int = 1, device: str = "cpu"):
     val_losses = []
     took_snapshots = [(-1, True)]
     indices = []
+    tr_loader_iterator = iter(train_loader)
     # Save initial weights
     torch.save(network.state_dict(), weights_folder / "initial_weights.pt")
     for step in tqdm(range(num_steps)):
-        train_loss, took_snapshot, sampled_indices = train_step(device)
+        try:
+            train_loss, took_snapshot, sampled_indices = train_step(
+                tr_loader_iterator, device
+            )
+        except StopIteration:
+            tr_loader_iterator = iter(train_loader)
+            train_loss, took_snapshot, sampled_indices = train_step(
+                tr_loader_iterator, device
+            )
         indices.append((step, tensor_to_arr_or_scalar(sampled_indices)))
         tr_losses.append((step, train_loss))
         took_snapshots.append((step, took_snapshot))

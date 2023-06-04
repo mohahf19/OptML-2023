@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-
 class CNN(nn.Module):
     def __init__(self, num_classes: int, num_channels: int = 3):
         super().__init__()

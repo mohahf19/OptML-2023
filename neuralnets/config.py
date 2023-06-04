@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from cnn import CNN
+#from lenet import LeNet
 from indexed_dataset import IndexedDataset
 from torchvision import datasets, transforms
 

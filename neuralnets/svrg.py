@@ -21,20 +21,24 @@ class SVRG(Optimizer):
         self.loss_func = loss_func
         self.device = device
 
-        self.take_snapshot()
+        self.prev_snapshot = False
 
     def __setstate__(self, state):
         super().__setstate__(state)
 
     def step(self, x, y, closure=None) -> bool:
-        var_red = self.variance_reduction_stoch_grad(x, y)
-
-        for p, var_red_term in zip(self.params, var_red):
-            update = p.grad - var_red_term
-            p.data = p.data - self.lr * update
-
+        if self.prev_snapshot:
+            var_red = self.variance_reduction_stoch_grad(x, y)
+            for p, var_red_term in zip(self.params, var_red):
+                update = p.grad - var_red_term
+                p.data = p.data - self.lr * update
+        else:
+            for p in self.params:
+                update = p.grad
+                p.data = p.data - self.lr * update
         if np.random.rand() <= self.prob:  # coin flip
             self.take_snapshot()
+            self.prev_snapshot = True
             return True
         return False
 
