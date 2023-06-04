@@ -163,6 +163,8 @@ datasets/year/
 datasets/cov/
 datasets/ijcnn1
 .DS_Store
-neuralnets/batched/data/
 
 **.pt
+
+
+neuralnets/batched/data/
