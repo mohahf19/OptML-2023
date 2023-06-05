@@ -17,7 +17,7 @@ from config import (
         train_loader_temp_c,
         test_every_x_steps_c
     )
-from svrg import SVRG
+from sgd import SGD
 from tqdm import tqdm
 from utils import visualize_losses
 
@@ -42,13 +42,10 @@ for run in range(5):
 
     steps_per_epoch = len(train_loader.dataset)//batch_size
     decrease_lr_epochs = [150,220]
-    optimizer = SVRG(
+    optimizer = SGD(
         network.parameters(),
         lr=0.1,
         weight_decay = 0.0001,
-        snapshot_rand = False,
-        prob_snapshot=2 / steps_per_epoch, # twice per epoch in expectation
-        steps_per_snapshot = steps_per_epoch,
         nn=network_temp,
         loss_func=criterion,
         data_loader=train_loader_temp,
@@ -119,10 +116,10 @@ for run in range(5):
         return tr_losses, val_losses, took_snapshots, indices
 
 
-    output_dir = output_dir / f"svrg_{run}"
+    output_dir = output_dir / f"sgd_{run}"
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    weights_dir = output_dir / f"weights_{run}"
+    weights_dir = output_dir / f"weights_sgd_{run}"
     weights_dir.mkdir(exist_ok=True, parents=True)
 
     print("Started training..")
@@ -130,7 +127,7 @@ for run in range(5):
         num_epochs=num_epochs, weights_folder=weights_dir, device=device
     )
 
-    with open(output_dir / f"results_{run}.pkl", "wb") as f:
+    with open(output_dir / f"results_sgd_{run}.pkl", "wb") as f:
         pickle.dump(
             {
                 "train": tr_losses,
@@ -141,11 +138,11 @@ for run in range(5):
             f,
         )
 
-    vis_path = output_dir / f"loss_{run}.png"
+    vis_path = output_dir / f"sgd_loss_{run}.png"
     visualize_losses(
         output_path=str(vis_path),
         tr_losses=tr_losses,
         val_losses=val_losses,
         snapshots=took_snapshots,
-        title="SVRG Losses",
+        title="SGD Losses",
     )
