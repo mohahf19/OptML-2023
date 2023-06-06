@@ -34,7 +34,7 @@ optimizer = SAGA(
     device=device,
     assignment=assignment,
     num_parts=num_parts,
-    train_loder_partitions=train_loder_partitions
+    train_partitions=train_loder_partitions
 )
 
 def tensor_to_arr_or_scalar(tensor: torch.Tensor) -> np.ndarray | float:
