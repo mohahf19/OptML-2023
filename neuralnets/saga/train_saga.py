@@ -1,63 +1,40 @@
-# Get MNIST data
-
-
 import pickle
+from collections.abc import Iterator
 from pathlib import Path
-
 import numpy as np
 import torch
-from config_saga import (
+
+from config import (
     device,
     network,
-    networks_temp,
+    network_temp,
     num_steps,
     output_dir,
+    num_parts,
     test_every_n_steps,
     test_loader,
     train_loader,
-    train_loader_temp_full,
-    train_loader_temp_single,
-    partitions,
-    X,
-    y
+    train_loader_temp,
+    assignment,
+    train_loder_partitions
 )
-X = X.to(device)
-y = y.to(device)
-
-partitions = 1
-print("**************", X.device, X.shape)
-X_block = torch.zeros([partitions, int(np.ceil(X.shape[0]/partitions)), 1] + list(X.shape[1:]))
-X_block[0] = X.reshape([int(np.ceil(X.shape[0]/partitions)), 1] + list(X.shape[1:]))
-X_block = X_block.to(device)
-y_block = torch.zeros([partitions, int(np.ceil(y.shape[0]/partitions))] + list(y.shape[1:]))
-y_block[0] = y
-y_block = y_block.type(torch.int8)
-X_block = X_block.to(device)
-y_block = y_block.to(device)
-print("1 ---------------------------------", X_block.device, X_block.shape)
-print("2 ---------------------------------", y_block.device, y_block.shape, y_block[0,0])
-
-from sagapartition import SAGAPartition
+from saga import SAGA
 from tqdm import tqdm
 from utils import visualize_losses
 
-network.to(device)
-for i in range(len(networks_temp)):
-    networks_temp[i] = networks_temp[i].to(device)
-
 criterion = torch.nn.CrossEntropyLoss()
 
-optimizer = SAGAPartition(
+optimizer = SAGA(
     network.parameters(),
     lr=0.001,
     prob=1,
-    nns=networks_temp,
+    nns=network_temp,
     loss_func=criterion,
-    data_loader_part=train_loader_temp_full,
+    data_loader=train_loader_temp,
     device=device,
-    num_part=partitions,
-    data = X_block,
-    targets = y_block
+    assignment=assignment,
+    num_parts=num_parts,
+    train_loder_partitions=train_loder_partitions
 )
 
 def tensor_to_arr_or_scalar(tensor: torch.Tensor) -> np.ndarray | float:
@@ -66,9 +43,9 @@ def tensor_to_arr_or_scalar(tensor: torch.Tensor) -> np.ndarray | float:
     return tensor.detach().cpu().numpy()
 
 
-def train_step(it_train, device: str = "cpu"):
+def train_step(tr_loader_iterator: Iterator, device: str = "cpu"):
     network.train()
-    data, target, indices = next(it_train)
+    data, target, indices = next(tr_loader_iterator)
     data, target = data.to(device), target.to(device)
     output = network(data)
     optimizer.zero_grad()
@@ -76,7 +53,6 @@ def train_step(it_train, device: str = "cpu"):
     loss.backward()
     took_snapshot = optimizer.step(x=data, y=target, i=indices[0])
     return loss.item(), took_snapshot, indices
-
 
 def test(device: str = "cpu"):
     network.train(False)
@@ -137,8 +113,7 @@ output_dir.mkdir(exist_ok=True, parents=True)
 weights_dir = output_dir / "weights"
 weights_dir.mkdir(exist_ok=True, parents=True)
 
-train_b = True
-if train_b:
+if False:
     print("Started training..")
     tr_losses, val_losses, took_snapshots, indices = train(
         num_steps=num_steps, weights_folder=weights_dir, device=device
