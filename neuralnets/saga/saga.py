@@ -13,7 +13,7 @@ class SAGA(Optimizer):
 
         self.lr = lr
         self.nns = nns  # stored snapshot neural networ, i.e. store the weight
-        self.grad_avg = [None for _ in range(num_parts)]  # full gradient at stored snapshot weight
+        self.grad_avg = []  # full gradient at stored snapshot weight
         self.prob = prob  # probability of updating snapshot
         self.data_loader = (
             data_loader  # access to full dataset to compute average gradient
@@ -98,8 +98,11 @@ class SAGA(Optimizer):
 
     def take_snapshot(self, part):
         print("Taking snapshot..")
+        init_avg = True if len(self.grad_avg) == 0 else False
         for p in self.nns[part].parameters():
             p.grad = None
+            if init_avg:
+                self.grad_avg.append(None)
 
         self.nns[part] = self.nns[part].to(self.device)
         for data, labels, _ in self.train_partitions[part]:
@@ -108,12 +111,16 @@ class SAGA(Optimizer):
             output = self.nns[part](data)
             loss = self.loss_func(output, labels)
             loss.backward()
-        for global_old, part_old in zip(self.grad_avg, self.nns[part].parameters()):
-            global_old = global_old-part_old
+        for j, part_old in enumerate(self.nns[part].parameters()):
+            if self.grad_avg[j] == None:
+                self.grad_avg[j] = deepcopy(part_old.grad)
+            else:
+                self.grad_avg[j] -= part_old.grad
         
         # update snapshot
         for p_local, p_temp in zip(self.params, self.nns[part].parameters()):
             p_temp = deepcopy(p_local)
+        
         # zeroing the gradients
         for p in self.nns[part].parameters():
             p.grad = None
@@ -128,5 +135,5 @@ class SAGA(Optimizer):
             loss = self.loss_func(output, labels)
             loss.backward()
 
-        for global_minus_old, part_new in zip(self.grad_avg, self.nns[part].parameters()):
-            global_minus_old = global_minus_old+part_old
+        for j, part_new in enumerate(self.nns[part].parameters()):
+            self.grad_avg[j] = self.grad_avg[j] + part_new.grad

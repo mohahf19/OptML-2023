@@ -41,7 +41,7 @@ np.random.seed(seed)
 train_dataset, test_dataset = get_data()
 batch_size_full = 2**10
 num_steps = 20000
-test_every_n_steps = 100
+test_every_n_steps = 10
 num_parts = 10
 
 device = "mps"

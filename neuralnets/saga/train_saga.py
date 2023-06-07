@@ -113,7 +113,7 @@ output_dir.mkdir(exist_ok=True, parents=True)
 weights_dir = output_dir / "weights"
 weights_dir.mkdir(exist_ok=True, parents=True)
 
-if False:
+if True:
     print("Started training..")
     tr_losses, val_losses, took_snapshots, indices = train(
         num_steps=num_steps, weights_folder=weights_dir, device=device
