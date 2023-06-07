@@ -51,22 +51,48 @@ class SAGAPartition(Optimizer):
     def __setstate__(self, state):
         super().__setstate__(state)
 
-    def step(self, x, y, i, closure=None) -> bool:
+    def step(self, x, y, i, closure=None) :
+        flag = False
+        params_old = []
+        variance_term = []
+        sgd_step = []
+        grad_term = []
+        snap_dist = 0.0
+        dist = 0.0
+
         print(x.shape, y.shape)
         if self.prev_snapshot:
             var_red = self.variance_reduction_stoch_grad(x, y)
             for p, var_red_term in zip(self.params, var_red):
+                params_old.append(p.clone())
+                sgd_step.append(p.grad.clone())
+                variance_term.append((p.grad -var_red_term).clone())
+                grad_term.append(p.grad.clone())
                 update = p.grad - var_red_term
                 p.data = p.data - self.lr * update
+
+            for p, p_snap, p_old  in zip(self.params, self.params_snap, params_old):
+                snap_dist += (p.data - p_snap.data).norm()
+                dist += (p.data - p_old.data).norm()
+
         else:
+            params_old.append(p.clone())
+            grad_term.append(p.grad.clone())
+            sgd_step.append(p.grad.clone())
+            variance_term.append(p.grad.clone())
             for p in self.params:
                 update = p.grad
                 p.data = p.data - self.lr * update
+                
+            for p, p_old  in zip(self.params, params_old):
+                dist += (p.data - p_old.data).norm()
+
         if np.random.rand() <= self.prob:  # coin flip
             self.take_snapshot()
             self.prev_snapshot = True
-            return True
-        return False
+            flag = True
+
+        return flag, variance_term, grad_term, snap_dist, dist, sgd_step
 
     def variance_reduction_stoch_grad(self, x, y):
         # zeroing the gradients

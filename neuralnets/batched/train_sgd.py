@@ -69,8 +69,8 @@ for run in range(5):
         optimizer.zero_grad()
         loss = criterion(output, target)
         loss.backward()
-        took_snapshot = optimizer.step(x=data, y=target)
-        return loss.item(), took_snapshot, indices
+        took_snapshot, grad_term, dist= optimizer.step(x=data, y=target)
+        return loss.item(), took_snapshot, indices, grad_term, dist
 
     def test(device: str = "cpu"):
         network.train(False)
@@ -88,6 +88,12 @@ for run in range(5):
         val_losses = []
         took_snapshots = [(-1, True)]
         indices = []
+        moving_variance = []
+        avg_grad = []
+        distances = []
+        count = 0.0
+        #parameters for moving average
+        alpha = 0.25
         tr_loader_iterator = iter(train_loader)
         # Save initial weights
         torch.save(network.state_dict(), weights_folder / "initial_weights.pt")
@@ -101,19 +107,39 @@ for run in range(5):
                 loss = criterion(output, target)
                 loss.backward()
 
-                took_snapshot = optimizer.step(step=step,x=data, y=target)
+                took_snapshot, grad_term, dist = optimizer.step(step=step,x=data, y=target)
 
                 indices.append((step, tensor_to_arr_or_scalar(index)))
                 tr_losses.append((step, loss.item()))
                 took_snapshots.append((step, took_snapshot))
+
+                #computing moving averages
+                if len(avg_grad) == 0:
+                    avg_grad = deepcopy(grad_term)
+                else:
+                    for j, g in enumerate(grad_term):
+                        avg_grad[j] += g
+                count +=1
+                var_term = 0.0
+                for var, avg_g in zip(grad_term, avg_grad):
+                    var_term += torch.norm(var - avg_g/count)**2
+
+                if len(moving_variance) == 0:
+                    moving_variance.append(var_term)
+                else:
+                    new_variance = (1 - alpha)*moving_variance[-1] + alpha*var_term
+                    moving_variance.append(new_variance)
+
+                distances.append(dist)
                 if step % test_every_x_steps == 0:
                     torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
                     val_loss = test(device)
                     val_losses.append((step, val_loss))
                     print(f"Step: {step}, Train Loss: {loss.item()}, Test Loss: {val_loss}")
                 step += 1
+                print(moving_variance[-1])
 
-        return tr_losses, val_losses, took_snapshots, indices
+        return tr_losses, val_losses, took_snapshots, indices, moving_variance, distances
 
 
     output_dir = output_dir / f"sgd_{run}"
@@ -123,7 +149,7 @@ for run in range(5):
     weights_dir.mkdir(exist_ok=True, parents=True)
 
     print("Started training..")
-    tr_losses, val_losses, took_snapshots, indices = train(
+    tr_losses, val_losses, took_snapshots, indices, moving_variance, distances = train(
         num_epochs=num_epochs, weights_folder=weights_dir, device=device
     )
 
@@ -134,6 +160,9 @@ for run in range(5):
                 "val": val_losses,
                 "took_snapshots": took_snapshots,
                 "sampled_indices": indices,
+                "variances": moving_variance,
+                "distances": distances
+
             },
             f,
         )

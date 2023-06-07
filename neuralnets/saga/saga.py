@@ -23,6 +23,7 @@ class SAGA(Optimizer):
         self.num_parts = num_parts
         self.assignment = assignment
         self.train_partitions = train_partitions
+        self.params_snap = []
 
         self.prev_snapshot = [False for _ in range(num_parts)]
 
@@ -31,20 +32,45 @@ class SAGA(Optimizer):
 
     def step(self, x, y, i, closure=None) -> bool:
         part = self.assignment[i]
+        flag = False
+        params_old = []
+        variance_term = []
+        sgd_step = []
+        grad_term = []
+        snap_dist = 0.0
+        dist = 0.0
+
         if self.prev_snapshot[part]:
             var_red = self.variance_reduction_stoch_grad(x, y, part)
             for p, var_red_term in zip(self.params, var_red):
+                params_old.append(p.clone())
+                sgd_step.append(p.grad.clone())
+                variance_term.append((p.grad -var_red_term).clone())
+                grad_term.append(p.grad.clone())
                 update = p.grad - var_red_term
                 p.data = p.data - self.lr * update
+
+            for p, p_snap, p_old  in zip(self.params, self.params_snap, params_old):
+                snap_dist += (p.data - p_snap.data).norm()
+                dist += (p.data - p_old.data).norm()
         else:
             for p in self.params:
+                params_old.append(p.clone())
+                grad_term.append(p.grad.clone())
+                sgd_step.append(p.grad.clone())
+                variance_term.append(p.grad.clone())
                 update = p.grad
                 p.data = p.data - self.lr * update
+            
+            for p, p_old  in zip(self.params, params_old):
+                dist += (p.data - p_old.data).norm()
+
         if np.random.rand() <= self.prob:  # coin flip
             self.take_snapshot(part)
             self.prev_snapshot[part] = True
-            return True
-        return False
+            flag = True
+
+        return flag, variance_term, grad_term, snap_dist, dist, sgd_step
 
     def variance_reduction_stoch_grad(self, x, y, part):
         # zeroing the gradients

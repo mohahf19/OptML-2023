@@ -46,7 +46,7 @@ batch_full_grads = 2**20
 num_epochs_c = 250
 test_every_x_steps_c = (len(train_dataset)//batch_size_c)//10
 
-device_c = "mps"
+device_c = "cpu"
 train_loader_c = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_c, shuffle=True)
 test_loader_c = torch.utils.data.DataLoader(
     test_dataset, batch_size=batch_full_grads, shuffle=True
