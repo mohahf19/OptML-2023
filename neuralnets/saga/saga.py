@@ -13,7 +13,8 @@ class SAGA(Optimizer):
 
         self.lr = lr
         self.nns = nns  # stored snapshot neural networ, i.e. store the weight
-        self.grad_avg = []  # full gradient at stored snapshot weight
+        self.grad_sum = []  # full gradient at stored snapshot weight
+        self.denom_avg = 0
         self.prob = prob  # probability of updating snapshot
         self.data_loader = (
             data_loader  # access to full dataset to compute average gradient
@@ -67,7 +68,11 @@ class SAGA(Optimizer):
 
         if np.random.rand() <= self.prob:  # coin flip
             self.take_snapshot(part)
-            self.prev_snapshot[part] = True
+            if not self.prev_snapshot[part]:
+                self.prev_snapshot[part] = True
+                print("incrementing ----------------------------------------")
+                self.denom_avg += 1
+            
             flag = True
 
         return flag, variance_term, grad_term, snap_dist, dist, sgd_step
@@ -83,8 +88,8 @@ class SAGA(Optimizer):
         loss.backward()
 
         grad_list = []
-        for p, g_avg in zip(self.nns[part].parameters(), self.grad_avg):
-            grad_list.append(p.grad - g_avg)
+        for p, g_avg in zip(self.nns[part].parameters(), self.grad_sum):
+            grad_list.append(p.grad - g_avg/self.denom_avg)
 
         return grad_list
 
@@ -111,24 +116,24 @@ class SAGA(Optimizer):
             part_avg += 1
 
         # copy full gradient
-        self.grad_avg = [None for _ in self.params]
+        self.grad_sum = [None for _ in self.params]
         for part_avg in range(self.num_parts):
             if self.prev_snapshot[part_avg]:
                 for p_index, p in enumerate(self.nns[part_avg].parameters()):
-                    if self.grad_avg[p_index] == None:
-                        self.grad_avg[p_index] = p.grad
+                    if self.grad_sum[p_index] == None:
+                        self.grad_sum[p_index] = p.grad
                     else:
-                        self.grad_avg[p_index] += p.grad
-        for p_index in range(len(self.grad_avg)):
-            self.grad_avg[p_index] /= ((len(self.data_loader.dataset)//self.num_parts)*len([t for t in self.prev_snapshot if t==True]))
+                        self.grad_sum[p_index] += p.grad
+        for p_index in range(len(self.grad_sum)):
+            self.grad_sum[p_index] /= ((len(self.data_loader.dataset)//self.num_parts)*len([t for t in self.prev_snapshot if t==True]))
 
     def take_snapshot(self, part):
         print("Taking snapshot..")
-        init_avg = True if len(self.grad_avg) == 0 else False
+        init_avg = True if len(self.grad_sum) == 0 else False
         for p in self.nns[part].parameters():
             p.grad = None
             if init_avg:
-                self.grad_avg.append(None)
+                self.grad_sum.append(None)
 
         self.nns[part] = self.nns[part].to(self.device)
         for data, labels, _ in self.train_partitions[part]:
@@ -138,10 +143,10 @@ class SAGA(Optimizer):
             loss = self.loss_func(output, labels)
             loss.backward()
         for j, part_old in enumerate(self.nns[part].parameters()):
-            if self.grad_avg[j] == None:
-                self.grad_avg[j] = deepcopy(part_old.grad)
+            if self.grad_sum[j] == None:
+                self.grad_sum[j] = deepcopy(part_old.grad)
             else:
-                self.grad_avg[j] -= part_old.grad
+                self.grad_sum[j] -= part_old.grad
         
         # update snapshot
         for p_local, p_temp in zip(self.params, self.nns[part].parameters()):
@@ -150,7 +155,6 @@ class SAGA(Optimizer):
         # zeroing the gradients
         for p in self.nns[part].parameters():
             p.grad = None
-        self.prev_snapshot[part] = True
 
         # compute full gradient at snapshot point
         self.nns[part] = self.nns[part].to(self.device)
@@ -162,4 +166,4 @@ class SAGA(Optimizer):
             loss.backward()
 
         for j, part_new in enumerate(self.nns[part].parameters()):
-            self.grad_avg[j] = self.grad_avg[j] + part_new.grad
+            self.grad_sum[j] = self.grad_sum[j] + part_new.grad
