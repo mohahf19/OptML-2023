@@ -64,19 +64,6 @@ def test(device: str = "cpu"):
         running_loss += loss.item()
     return running_loss / len(test_loader)
 
-
-# def compute_entire_gradient(network: CNN, criterion, device: str = "cpu"):
-#     print("Computing entire gradient..")
-#     for data, target in tqdm(train_loader):
-#         # data, target = data.to(device), target.to(device)
-#         output = network(data)
-#         loss = criterion(output, target)
-#         loss.backward()
-#
-#     for param in network.parameters():
-#         param.grad /= len(train_loader)
-
-
 def train(weights_folder: Path, num_steps: int = 1, device: str = "cpu"):
     tr_losses = []
     val_losses = []
