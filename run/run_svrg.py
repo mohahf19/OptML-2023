@@ -1,27 +1,3 @@
-# print("Training with SVRG")
-#
-# # training parameters
-# batch_size = 128
-# batch_full_grads = 2**20
-#
-# device_c = args.device
-# train_loader_c = torch.utils.data.DataLoader(
-#     train_dataset, batch_size=batch_size_c, shuffle=True
-# )
-# test_loader_c = torch.utils.data.DataLoader(
-#     test_dataset, batch_size=batch_full_grads, shuffle=True
-# )
-#
-# train_loader_temp_c = torch.utils.data.DataLoader(
-#     train_dataset, batch_size=batch_full_grads, shuffle=True
-# )
-#
-# network = NN()
-# network_temp = NN()
-# network_temp.load_state_dict(network.state_dict())
-# network.to(device)
-# network_temp.to(device)
-
 import pickle
 from copy import deepcopy
 
@@ -87,6 +63,7 @@ def train(
     num_steps,
     test_every_x_steps,
     test_loader,
+    weights_folder,
 ):
     train_loader_iterator = iter(train_loader)
     train_losses = []
@@ -120,6 +97,7 @@ def train(
         distances.append((step, dist))
         snap_distances.append((step, snap_dist))
         if step % test_every_x_steps == 0:
+            torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
             test_loss = test(network, test_loader, criterion, device)
             test_losses.append((step, test_loss))
 
@@ -163,6 +141,11 @@ def train(
 
 for run_id in range(num_runs):
     print("Run", run_id)
+    run_output_dir = output_dir / "svrg_runs" / f"{run_id}"
+    run_output_dir.mkdir(parents=True, exist_ok=True)
+    weights_folder = run_output_dir / "weights"
+    weights_folder.mkdir(parents=True, exist_ok=True)
+
     criterion = deepcopy(criterion)
     network = NN()
     network_temp = NN()
@@ -212,10 +195,9 @@ for run_id in range(num_runs):
         num_steps,
         test_every_x_steps,
         test_loader,
+        weights_folder,
     )
 
-    run_output_dir = output_dir / "svrg_runs" / f"{run_id}"
-    run_output_dir.mkdir(parents=True, exist_ok=True)
     with open(run_output_dir / "train_data.pkl", "wb") as f:
         pickle.dump(
             {

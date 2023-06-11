@@ -47,6 +47,7 @@ def train(
     num_steps,
     test_every_x_steps,
     test_loader,
+    weights_folder,
 ):
     train_loader_iterator = iter(train_loader)
     train_losses = []
@@ -68,6 +69,7 @@ def train(
         train_losses.append((step, train_loss))
         distances.append((step, dist))
         if step % test_every_x_steps == 0:
+            torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
             test_loss = test(network, test_loader, criterion, device)
             test_losses.append((step, test_loss))
 
@@ -94,6 +96,11 @@ def train(
 
 for run_id in range(num_runs):
     print("Run", run_id)
+    run_output_dir = output_dir / "sgd_runs" / f"{run_id}"
+    run_output_dir.mkdir(parents=True, exist_ok=True)
+    weights_folder = run_output_dir / "weights"
+    weights_folder.mkdir(parents=True, exist_ok=True)
+
     criterion = deepcopy(criterion)
     network = NN()
     network_temp = NN()
@@ -133,10 +140,9 @@ for run_id in range(num_runs):
         num_steps,
         test_every_x_steps,
         test_loader,
+        weights_folder,
     )
 
-    run_output_dir = output_dir / "sgd_runs" / f"{run_id}"
-    run_output_dir.mkdir(parents=True, exist_ok=True)
     with open(run_output_dir / "train_data.pkl", "wb") as f:
         pickle.dump(
             {

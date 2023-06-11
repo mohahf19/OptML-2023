@@ -18,15 +18,15 @@ np.random.seed(seed)
 train_dataset, test_dataset = datasets.get_cifar10_data()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--num_steps", type=int, default=200)
+parser.add_argument("--num-steps", type=int, default=200)
 parser.add_argument("--device", type=str, default="cpu")
 parser.add_argument("--test-every-x-steps", type=int, default=20)
 parser.add_argument("--num-runs", type=int, default=5)
 parser.add_argument("--seed", type=int, default=41)
+parser.add_argument("--num-parts", type=int, default=10)  # clustered saga
 
 args = parser.parse_args()
 
-args = parser.parse_args()
 # Set reproducaible
 seed = args.seed
 torch.manual_seed(seed)
@@ -39,6 +39,7 @@ print(device)
 num_steps = args.num_steps
 test_every_x_steps = args.test_every_x_steps
 num_runs = args.num_runs
+num_parts = args.num_parts
 
 # loss function
 criterion = torch.nn.CrossEntropyLoss()
@@ -49,9 +50,3 @@ NN = LeNet
 # make folder for logging
 output_dir = Path("output")
 output_dir.mkdir(exist_ok=True, parents=True)
-
-network = LeNet(normbatch=True)
-network_temp = LeNet(normbatch=True)
-network_temp.load_state_dict(network.state_dict())
-network.to(device)
-network_temp.to(device)
