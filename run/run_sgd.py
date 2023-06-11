@@ -1,10 +1,6 @@
-import argparse
 import pickle
-from collections.abc import Iterator
 from copy import deepcopy
-from pathlib import Path
 
-import numpy as np
 import torch
 from config import (
     NN,
@@ -21,8 +17,6 @@ from sgd import SGD
 from tqdm import tqdm
 from train_utils import tensor_to_arr_or_scalar, test
 
-# TODO: add command line argument parse for parameters
-
 print("Training with SGD")
 batch_size = (
     2  # We use Lenet with batchnorm, so we need more than one sample per batch..
@@ -31,7 +25,7 @@ batch_size_full_grads = 2**20
 
 
 ## Define the training methods
-def train_step(netowrk, train_loader_iterator, device, optimizer, criterion, step):
+def train_step(network, train_loader_iterator, device, optimizer, criterion, step):
     network.train()
     data, target, index = next(train_loader_iterator)
 
