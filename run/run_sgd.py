@@ -17,7 +17,6 @@ from config import (
     test_every_x_steps,
     train_dataset,
 )
-from numpy._typing import _16Bit
 from sgd import SGD
 from tqdm import tqdm
 from train_utils import tensor_to_arr_or_scalar, test
