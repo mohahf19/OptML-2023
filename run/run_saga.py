@@ -2,18 +2,9 @@ import pickle
 from copy import deepcopy
 
 import torch
-from config import (
-    NN,
-    criterion,
-    device,
-    num_parts,
-    num_runs,
-    num_steps,
-    output_dir,
-    test_dataset,
-    test_every_x_steps,
-    train_dataset,
-)
+from config import (NN, criterion, device, num_parts, num_runs, num_steps,
+                    output_dir, test_dataset, test_every_x_steps,
+                    train_dataset)
 from saga import SAGA
 from tqdm import tqdm
 from train_utils import tensor_to_arr_or_scalar, test
@@ -170,7 +161,10 @@ def train(
 
 for run_id in range(num_runs):
     print("Run", run_id)
-    run_output_dir = output_dir / "saga_runs" / f"{run_id}"
+        run_output_dir = (
+        output_dir / f"saga_runs_bs{batch_size}_lr{learning_rate}" / f"{run_id}"
+    )
+
     run_output_dir.mkdir(parents=True, exist_ok=True)
     weights_folder = run_output_dir / "weights"
     weights_folder.mkdir(parents=True, exist_ok=True)
