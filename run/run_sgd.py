@@ -19,7 +19,7 @@ from train_utils import tensor_to_arr_or_scalar, test
 
 batch_size = 128
 batch_size_full_grads = 512
-learning_rate = 0.005
+learning_rate = 0.1
 
 print(f"Training with SGD (gamma = {learning_rate})")
 

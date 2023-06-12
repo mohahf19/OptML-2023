@@ -19,7 +19,7 @@ from train_utils import tensor_to_arr_or_scalar, test
 
 batch_size = 1
 batch_size_full_grads = 512
-learning_rate = 0.01
+learning_rate = 0.1
 
 print(f"Training with SVRG (gamma = {learning_rate})")
 
@@ -175,10 +175,10 @@ for run_id in range(num_runs):
 
     optimizer = SVRG(
         network.parameters(),
-        lr=0.1,
+        lr=learning_rate,
         weight_decay=0, #0.0001,
         snapshot_rand=True,
-        prob_snapshot=1 / 10,
+        prob_snapshot=2 / test_every_x_steps,
         steps_per_snapshot=10,  # TODO: put the right thing here
         nn=network_temp,
         loss_func=criterion,
