@@ -61,10 +61,16 @@ def train(
     alpha = 0.25
 
     for step in tqdm(range(num_steps)):
-        grad_term, dist, train_loss, index = train_step(
-            network, train_loader_iterator, device, optimizer, criterion, step
-        )
-        
+        try:
+            grad_term, dist, train_loss, index = train_step(
+                network, train_loader_iterator, device, optimizer, criterion, step
+            )
+        except StopIteration:
+            train_loader_iterator = iter(train_loader)
+            grad_term, dist, train_loss, index = train_step(
+                network, train_loader_iterator, device, optimizer, criterion, step
+            )
+
         # append
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
@@ -87,7 +93,7 @@ def train(
         else:
             new_variance = (1 - alpha) * moving_variance[-1] + alpha * var_term
         moving_variance.append(new_variance)
-        
+
         if step % test_every_x_steps == 0:
             # torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
             test_loss = test(network, test_loader, criterion, device)
@@ -126,7 +132,7 @@ for run_id in range(num_runs):
     optimizer = SGD(
         network.parameters(),
         lr=learning_rate,
-        weight_decay=0, #0.0001,
+        weight_decay=0,  # 0.0001,
         nn=network_temp,
         loss_func=criterion,
         device=device,
@@ -155,7 +161,7 @@ for run_id in range(num_runs):
                 "sampled_indices": indices,
                 "variances": moving_variance,
                 "distances": distances,
-                "stoch_loss": stoch_loss
+                "stoch_loss": stoch_loss,
             },
             f,
         )
