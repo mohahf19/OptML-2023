@@ -51,6 +51,7 @@ def train(
 ):
     train_loader_iterator = iter(train_loader)
     train_losses = []
+    stoch_loss = []
     test_losses = []
     indices = []
     moving_variance = []
@@ -67,6 +68,7 @@ def train(
         # append
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
+        stoch_loss.append((step, train_loss))
 
         # Moving averages
         if len(avg_grad) == 0:
@@ -94,7 +96,7 @@ def train(
             train_losses.append((step, train_loss_full))
             print("############", train_loss_full, new_variance.item())
 
-    return train_losses, test_losses, indices, moving_variance, distances
+    return train_losses, stoch_loss, test_losses, indices, moving_variance, distances
 
 
 for run_id in range(num_runs):
@@ -133,7 +135,7 @@ for run_id in range(num_runs):
         momentum=0,
     )
 
-    train_losses, test_losses, indices, moving_variance, distances = train(
+    train_losses, stoch_loss, test_losses, indices, moving_variance, distances = train(
         network,
         train_loader,
         device,
@@ -153,6 +155,7 @@ for run_id in range(num_runs):
                 "sampled_indices": indices,
                 "variances": moving_variance,
                 "distances": distances,
+                "stoch_loss": stoch_loss
             },
             f,
         )

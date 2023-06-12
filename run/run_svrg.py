@@ -21,7 +21,7 @@ batch_size = 1
 batch_size_full_grads = 512
 learning_rate = 0.01
 
-print(f"Training with SAGA (gamma = {learning_rate})")
+print(f"Training with SVRG (gamma = {learning_rate})")
 
 
 ## Define the training methods
@@ -67,6 +67,7 @@ def train(
 ):
     train_loader_iterator = iter(train_loader)
     train_losses = []
+    stoch_loss = []
     test_losses = []
     indices = []
     moving_variance = []
@@ -99,6 +100,7 @@ def train(
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
         snap_distances.append((step, snap_dist))
+        stoch_loss.append((step, train_loss))
 
         # Moving averages
         if len(avg_grad) == 0:
@@ -137,6 +139,7 @@ def train(
 
     return (
         train_losses,
+        stoch_loss,
         test_losses,
         indices,
         moving_variance,
@@ -187,6 +190,7 @@ for run_id in range(num_runs):
     )
     (
         train_losses,
+        stoch_loss,
         test_losses,
         indices,
         moving_variance,
@@ -215,6 +219,7 @@ for run_id in range(num_runs):
                 "variances_sgd": moving_variance_sgd,
                 "snap_distances": snap_distances,
                 "distances": distances,
+                "stoch_loss": stoch_loss
             },
             f,
         )
