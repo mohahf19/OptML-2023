@@ -28,7 +28,9 @@ def get_cifar10_data():
 # returns normalized and tranformed MNIST dataset
 def get_mnist_data():
     transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+          [transforms.Resize((32, 32)),
+          transforms.ToTensor(),
+          transforms.Normalize((0.1307,), (0.3081,))]
     )
 
     train_dataset = datasets.MNIST(

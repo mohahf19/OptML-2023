@@ -66,11 +66,11 @@ from saga import SAGA
 from tqdm import tqdm
 from train_utils import tensor_to_arr_or_scalar, test
 
-print("Training with SAGA")
-batch_size = (
-    1  # We use Lenet with batchnorm, so we need more than one sample per batch..
-)
+batch_size = 1
 batch_size_full_grads = 512
+learning_rate = 0.01
+
+print(f"Training with SAGA (gamma = {learning_rate})")
 
 
 ## Define the training methods
@@ -145,13 +145,6 @@ def train(
         if took_snapshot:
             snapshot_steps.append(step)
         
-        if step % test_every_x_steps == 0:
-            # torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
-            test_loss = test(network, test_loader, criterion, device)
-            test_losses.append((step, test_loss))
-            train_loss_full = test(network, train_loader_full, criterion, device)
-            train_losses.append((step, train_loss_full))
-            print("############", train_loss_full)
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
         snap_distances.append((step, snap_dist))
@@ -172,16 +165,24 @@ def train(
             var_term_sgd += torch.norm(sgd - avg_g / count) ** 2
 
         if len(moving_variance) == 0:
-            moving_variance.append(var_term)
+            new_variance = var_term
         else:
             new_variance = (1 - alpha) * moving_variance[-1] + alpha * var_term
-            moving_variance.append(new_variance)
+        moving_variance.append(new_variance)
 
         if len(moving_variance_sgd) == 0:
-            moving_variance_sgd.append(var_term_sgd)
+            new_variance_sgd = var_term_sgd
         else:
-            new_variance = (1 - alpha) * moving_variance_sgd[-1] + alpha * var_term_sgd
-            moving_variance_sgd.append(new_variance)
+            new_variance_sgd = (1 - alpha) * moving_variance_sgd[-1] + alpha * var_term_sgd
+        moving_variance_sgd.append(new_variance_sgd)
+
+        if step % test_every_x_steps == 0:
+            # torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
+            test_loss = test(network, test_loader, criterion, device)
+            test_losses.append((step, test_loss))
+            train_loss_full = test(network, train_loader_full, criterion, device)
+            train_losses.append((step, train_loss_full))
+            print("############", train_loss_full, new_variance)
 
     return (
         train_losses,

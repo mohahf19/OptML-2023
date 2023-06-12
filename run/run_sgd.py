@@ -17,11 +17,11 @@ from sgd import SGD
 from tqdm import tqdm
 from train_utils import tensor_to_arr_or_scalar, test
 
-print("Training with SGD")
-batch_size = (
-    1  # We use Lenet with batchnorm, so we need more than one sample per batch..
-)
+batch_size = 128
 batch_size_full_grads = 512
+learning_rate = 0.005
+
+print(f"Training with SGD (gamma = {learning_rate})")
 
 
 ## Define the training methods
@@ -65,13 +65,6 @@ def train(
         )
         
         # append
-        if step % test_every_x_steps == 0:
-            # torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
-            test_loss = test(network, test_loader, criterion, device)
-            test_losses.append((step, test_loss))
-            train_loss_full = test(network, train_loader_full, criterion, device)
-            train_losses.append((step, train_loss_full))
-            print("############", train_loss_full)
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
 
@@ -88,10 +81,18 @@ def train(
             var_term += torch.norm(var - avg_g / count) ** 2
 
         if len(moving_variance) == 0:
-            moving_variance.append(var_term)
+            new_variance = var_term
         else:
             new_variance = (1 - alpha) * moving_variance[-1] + alpha * var_term
-            moving_variance.append(new_variance)
+        moving_variance.append(new_variance)
+        
+        if step % test_every_x_steps == 0:
+            # torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
+            test_loss = test(network, test_loader, criterion, device)
+            test_losses.append((step, test_loss))
+            train_loss_full = test(network, train_loader_full, criterion, device)
+            train_losses.append((step, train_loss_full))
+            print("############", train_loss_full, new_variance.item())
 
     return train_losses, test_losses, indices, moving_variance, distances
 
@@ -122,7 +123,7 @@ for run_id in range(num_runs):
 
     optimizer = SGD(
         network.parameters(),
-        lr=0.01,
+        lr=learning_rate,
         weight_decay=0, #0.0001,
         nn=network_temp,
         loss_func=criterion,

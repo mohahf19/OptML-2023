@@ -5,11 +5,11 @@ import torch.nn.functional as F
 # LeNet5 of Lecun et al.
 class LeNet(nn.Module):
 
-    def __init__(self, normbatch: bool = False):
+    def __init__(self, normbatch: bool = False, num_channels: int = 3):
         super(LeNet, self).__init__()
         self.normbatch = normbatch
 
-        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv1 = nn.Conv2d(num_channels, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
