@@ -15,7 +15,7 @@ torch.backends.mps.deterministic = True
 np.random.seed(seed)
 
 # get train and test dataset
-train_dataset, test_dataset = datasets.get_cifar10_data()
+train_dataset, test_dataset = datasets.get_mnist_data()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num-steps", type=int, default=200)

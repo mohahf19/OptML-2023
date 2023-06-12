@@ -5,7 +5,7 @@ import torch.nn.functional as F
 # LeNet5 of Lecun et al.
 class LeNet(nn.Module):
 
-    def __init__(self, normbatch: bool = False, num_channels: int = 3):
+    def __init__(self, normbatch: bool = False, num_channels: int = 1):
         super(LeNet, self).__init__()
         self.normbatch = normbatch
 
