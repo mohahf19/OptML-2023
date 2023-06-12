@@ -107,7 +107,9 @@ def train(
 
 for run_id in range(num_runs):
     print("Run", run_id)
-    run_output_dir = output_dir / "sgd_runs" / f"{run_id}"
+    run_output_dir = (
+        output_dir / f"sgd_runs_bs{batch_size}_lr{learning_rate}" / f"{run_id}"
+    )
     run_output_dir.mkdir(parents=True, exist_ok=True)
     weights_folder = run_output_dir / "weights"
     weights_folder.mkdir(parents=True, exist_ok=True)
