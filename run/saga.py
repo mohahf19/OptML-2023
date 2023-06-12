@@ -40,7 +40,8 @@ class SAGA(Optimizer):
         grad_term = []
         snap_dist = 0.0
         dist = 0.0
-
+        print(self.prev_snapshot)
+        print(part)
         if self.prev_snapshot[part]:
             var_red = self.variance_reduction_stoch_grad(x, y, part)
             for p, var_red_term in zip(self.params, var_red):
@@ -94,7 +95,7 @@ class SAGA(Optimizer):
         return grad_list
 
     def take_snapshot_costly(self, part):
-        print("Taking snapshot..")
+        #print("Taking snapshot..")
         # update snapshot
         for p_local, p_temp in zip(self.params, self.nns[part].parameters()):
             p_temp = deepcopy(p_local)

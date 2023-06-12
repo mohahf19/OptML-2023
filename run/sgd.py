@@ -11,7 +11,6 @@ class SGD(Optimizer):
         params,
         nn,
         loss_func,
-        data_loader,
         device,
         lr_decrease,
         decrease_step,
@@ -25,9 +24,6 @@ class SGD(Optimizer):
 
         self.lr = lr
         self.nn_temp = nn  # backup neural networ, can be useful for logging
-        self.data_loader = (
-            data_loader  # access to full dataset to compute average gradient
-        )
         self.loss_func = loss_func
         self.device = device
 
