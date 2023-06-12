@@ -1,51 +1,3 @@
-# batch_size_full = 10**20
-# num_steps = 20000
-# num_parts = 10
-#
-# # make data loader for testing
-# test_loader = torch.utils.data.DataLoader(
-#     test_dataset, batch_size=batch_size_full, shuffle=True
-# )
-#
-# # make data loaders for training
-# perm = torch.randperm(len(train_dataset)).tolist()
-# shuffled_dataset = torch.utils.data.Subset(train_dataset, perm)
-#
-# train_loader = torch.utils.data.DataLoader(
-#     shuffled_dataset, batch_size=1, shuffle=True
-# )
-#
-# train_loader_temp = torch.utils.data.DataLoader(
-#     shuffled_dataset, batch_size=len(train_dataset) // num_parts, shuffle=False
-# )
-#
-# assignment = [-1 for _ in range(len(train_dataset))]
-# batches = []
-# p = 0
-# for data, targets, indices in train_loader_temp:
-#     batches.append(indices)
-#     print(indices)
-#     for j in indices:
-#         assignment[j] = p
-#     p += 1
-# assert len([p for p in assignment if p == -1]) == 0
-#
-# s = len(train_dataset) // num_parts
-# train_loder_partitions = []
-# for p in range(num_parts):
-#     B = torch.utils.data.Subset(shuffled_dataset, [p * s + x for x in range(s)])
-#     train_loder_partitions.append(
-#         torch.utils.data.DataLoader(B, batch_size=s, shuffle=False)
-#     )
-#
-# network = NN()
-# network.to(device)
-#
-# network_temp = []
-# for p in range(num_parts):
-#     network_temp.append(NN())
-#     network_temp[p].load_state_dict(network.state_dict())
-#     network_temp[p].to(device)
 import pickle
 from copy import deepcopy
 
@@ -116,6 +68,7 @@ def train(
 ):
     train_loader_iterator = iter(train_loader)
     train_losses = []
+    stoch_losses = []
     test_losses = []
     indices = []
     moving_variance = []
@@ -144,10 +97,11 @@ def train(
         # append
         if took_snapshot:
             snapshot_steps.append(step)
-        
+
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
         snap_distances.append((step, snap_dist))
+        stoch_losses.append((step, train_loss))
 
         # Moving averages
         if len(avg_grad) == 0:
@@ -173,7 +127,9 @@ def train(
         if len(moving_variance_sgd) == 0:
             new_variance_sgd = var_term_sgd
         else:
-            new_variance_sgd = (1 - alpha) * moving_variance_sgd[-1] + alpha * var_term_sgd
+            new_variance_sgd = (1 - alpha) * moving_variance_sgd[
+                -1
+            ] + alpha * var_term_sgd
         moving_variance_sgd.append(new_variance_sgd)
 
         if step % test_every_x_steps == 0:
@@ -186,13 +142,14 @@ def train(
 
     return (
         train_losses,
+        stoch_losses,
         test_losses,
         indices,
         moving_variance,
         moving_variance_sgd,
         distances,
         snap_distances,
-        snapshot_steps
+        snapshot_steps,
     )
 
 
@@ -216,35 +173,45 @@ for run_id in range(num_runs):
 
     perm = torch.randperm(len(train_dataset)).tolist()
     shuffled_dataset = torch.utils.data.Subset(train_dataset, perm)
-    train_loader = torch.utils.data.DataLoader(shuffled_dataset, batch_size=1, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(
+        shuffled_dataset, batch_size=1, shuffle=True
+    )
 
-    train_loader_temp = torch.utils.data.DataLoader(shuffled_dataset, batch_size=len(train_dataset)//num_parts, shuffle=False)
+    train_loader_temp = torch.utils.data.DataLoader(
+        shuffled_dataset, batch_size=len(train_dataset) // num_parts, shuffle=False
+    )
 
     assignment = [-1 for _ in range(len(train_dataset))]
     batches = []
     p = 0
     for data, targets, indices in train_loader_temp:
         batches.append(indices)
-        #print(indices)
+        # print(indices)
         for j in indices:
             assignment[j] = p
         p += 1
     assert len([p for p in assignment if p == -1]) == 0
 
-    s = len(train_dataset)//num_parts
+    s = len(train_dataset) // num_parts
     train_loder_partitions = []
     for p in range(num_parts):
-        B = torch.utils.data.Subset(shuffled_dataset, [p*s + x for x in range(s)])
-        train_loder_partitions.append(torch.utils.data.DataLoader(B, batch_size=s, shuffle=False))
+        B = torch.utils.data.Subset(shuffled_dataset, [p * s + x for x in range(s)])
+        train_loder_partitions.append(
+            torch.utils.data.DataLoader(B, batch_size=s, shuffle=False)
+        )
 
-    #print("Setting up splits..")
-    #for p in range(num_parts):
+    # print("Setting up splits..")
+    # for p in range(num_parts):
     #    print("------", p)
     #    for a, b, i in train_loder_partitions[p]:
     #        print(i)
-    
-    train_loader_full = torch.utils.data.DataLoader(shuffled_dataset, batch_size=batch_size_full_grads, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size_full_grads, shuffle=False)
+
+    train_loader_full = torch.utils.data.DataLoader(
+        shuffled_dataset, batch_size=batch_size_full_grads, shuffle=True
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=batch_size_full_grads, shuffle=False
+    )
 
     optimizer = SAGA(
         network.parameters(),
@@ -260,13 +227,14 @@ for run_id in range(num_runs):
 
     (
         train_losses,
+        stoch_losses,
         test_losses,
         indices,
         moving_variance,
         moving_variance_sgd,
         distances,
         snap_distances,
-        snapshots
+        snapshots,
     ) = train(
         network,
         train_loader,
@@ -283,13 +251,14 @@ for run_id in range(num_runs):
         pickle.dump(
             {
                 "train": train_losses,
+                "stoch_loss": stoch_losses,
                 "val": test_losses,
                 "sampled_indices": indices,
                 "variances": moving_variance,
                 "variances_sgd": moving_variance_sgd,
                 "snap_distances": snap_distances,
                 "distances": distances,
-                "snapshot_steps": snapshots
+                "snapshot_steps": snapshots,
             },
             f,
         )
