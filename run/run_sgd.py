@@ -4,8 +4,10 @@ from copy import deepcopy
 import torch
 from config import (
     NN,
+    batch_size,
     criterion,
     device,
+    learning_rate,
     num_runs,
     num_steps,
     output_dir,
@@ -17,9 +19,7 @@ from sgd import SGD
 from tqdm import tqdm
 from train_utils import tensor_to_arr_or_scalar, test
 
-batch_size = 1
 batch_size_full_grads = 512
-learning_rate = 0.005
 
 print(f"Training with SGD (gamma = {learning_rate})")
 
@@ -108,7 +108,7 @@ def train(
 for run_id in range(num_runs):
     print("Run", run_id)
     run_output_dir = (
-        output_dir / f"sgd_runs_bs{batch_size}_lr{learning_rate}" / f"{run_id}"
+        output_dir / f"sgd_runs_bs{batch_size}_lr{learning_rate:1.0e}" / f"{run_id}"
     )
     run_output_dir.mkdir(parents=True, exist_ok=True)
     weights_folder = run_output_dir / "weights"

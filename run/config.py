@@ -24,6 +24,8 @@ parser.add_argument("--test-every-x-steps", type=int, default=20)
 parser.add_argument("--num-runs", type=int, default=5)
 parser.add_argument("--seed", type=int, default=41)
 parser.add_argument("--num-parts", type=int, default=10)  # clustered saga
+parser.add_argument("--batch-size", type=int, default=128)
+parser.add_argument("--lr", type=float, default=0.01)
 
 args = parser.parse_args()
 
@@ -40,6 +42,8 @@ num_steps = args.num_steps
 test_every_x_steps = args.test_every_x_steps
 num_runs = args.num_runs
 num_parts = args.num_parts
+learning_rate = args.lr
+batch_size = args.batch_size
 
 # loss function
 criterion = torch.nn.CrossEntropyLoss()
