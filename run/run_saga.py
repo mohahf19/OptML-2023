@@ -153,7 +153,7 @@ def train(
             test_losses.append((step, test_loss))
             train_loss_full = test(network, train_loader_full, criterion, device)
             train_losses.append((step, train_loss_full))
-            print("############", train_loss_full, new_variance)
+            print("############", train_loss_full, new_variance.item())
 
     return (
         train_losses,
