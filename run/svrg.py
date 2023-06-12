@@ -118,7 +118,7 @@ class SVRG(Optimizer):
         # copy full gradient
         self.grad_avg = []
         for p in params:
-            self.grad_avg.append(deepcopy(p.grad))
+            self.grad_avg.append(deepcopy(p.grad)/len(self.data_loader))
 
 
     def compute_full_grad(self):

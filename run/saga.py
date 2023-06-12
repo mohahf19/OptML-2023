@@ -16,9 +16,6 @@ class SAGA(Optimizer):
         self.grad_sum = []  # full gradient at stored snapshot weight
         self.denom_avg = 0
         self.prob = prob  # probability of updating snapshot
-        self.data_loader = (
-            data_loader  # access to full dataset to compute average gradient
-        )
         self.loss_func = loss_func
         self.device = device
         self.num_parts = num_parts
@@ -94,40 +91,6 @@ class SAGA(Optimizer):
 
         return grad_list
 
-    def take_snapshot_costly(self, part):
-        #print("Taking snapshot..")
-        # update snapshot
-        for p_local, p_temp in zip(self.params, self.nns[part].parameters()):
-            p_temp = deepcopy(p_local)
-        # zeroing the gradients
-        for p in self.nns[part].parameters():
-            p.grad = None
-        self.prev_snapshot[part] = True
-
-        # compute full gradient at snapshot point
-        self.nns[part] = self.nns[part].to(self.device)
-        part_avg = 0
-        for data, labels, _ in self.data_loader:
-            data, labels = data.to(self.device), labels.to(self.device)
-
-            output = self.nns[part_avg](data)
-            loss = self.loss_func(output, labels)
-            loss.backward()
-
-            part_avg += 1
-
-        # copy full gradient
-        self.grad_sum = [None for _ in self.params]
-        for part_avg in range(self.num_parts):
-            if self.prev_snapshot[part_avg]:
-                for p_index, p in enumerate(self.nns[part_avg].parameters()):
-                    if self.grad_sum[p_index] == None:
-                        self.grad_sum[p_index] = p.grad
-                    else:
-                        self.grad_sum[p_index] += p.grad
-        for p_index in range(len(self.grad_sum)):
-            self.grad_sum[p_index] /= ((len(self.data_loader.dataset)//self.num_parts)*len([t for t in self.prev_snapshot if t==True]))
-
     def take_snapshot(self, part):
         print("Taking snapshot..")
         init_avg = True if len(self.grad_sum) == 0 else False
@@ -147,7 +110,7 @@ class SAGA(Optimizer):
             if self.grad_sum[j] == None:
                 self.grad_sum[j] = deepcopy(part_old.grad)
             else:
-                self.grad_sum[j] -= part_old.grad
+                self.grad_sum[j] -= part_old.grad/len(self.train_partitions[part])
         
         # update snapshot
         for p_local, p_temp in zip(self.params, self.nns[part].parameters()):
@@ -167,4 +130,4 @@ class SAGA(Optimizer):
             loss.backward()
 
         for j, part_new in enumerate(self.nns[part].parameters()):
-            self.grad_sum[j] = self.grad_sum[j] + part_new.grad
+            self.grad_sum[j] = self.grad_sum[j] + part_new.grad/len(self.train_partitions[part])

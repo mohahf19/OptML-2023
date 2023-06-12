@@ -252,7 +252,6 @@ for run_id in range(num_runs):
         prob=1,
         nns=network_temp,
         loss_func=criterion,
-        data_loader=train_loader_full,
         device=device,
         assignment=assignment,
         num_parts=num_parts,
