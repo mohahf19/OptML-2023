@@ -80,23 +80,38 @@ def train(
     snapshot_steps = []
 
     for step in tqdm(range(num_steps)):
-        (
-            train_loss,
-            took_snapshot,
-            index,
-            variance_term,
-            grad_term,
-            snap_dist,
-            dist,
-            sgd_step,
-        ) = train_step(
-            network, train_loader_iterator, device, optimizer, criterion, step
-        )
+        try:
+            (
+                train_loss,
+                took_snapshot,
+                index,
+                variance_term,
+                grad_term,
+                snap_dist,
+                dist,
+                sgd_step,
+            ) = train_step(
+                network, train_loader_iterator, device, optimizer, criterion, step
+            )
+        except StopIteration:
+            train_loader_iterator = iter(train_loader)
+            (
+                train_loss,
+                took_snapshot,
+                index,
+                variance_term,
+                grad_term,
+                snap_dist,
+                dist,
+                sgd_step,
+            ) = train_step(
+                network, train_loader_iterator, device, optimizer, criterion, step
+            )
 
         # append
         if took_snapshot:
             snapshot_steps.append(step)
-        
+
         indices.append((step, tensor_to_arr_or_scalar(index)))
         distances.append((step, dist))
         snap_distances.append((step, snap_dist))
@@ -126,9 +141,11 @@ def train(
         if len(moving_variance_sgd) == 0:
             new_variance_sgd = var_term_sgd
         else:
-            new_variance_sgd = (1 - alpha) * moving_variance_sgd[-1] + alpha * var_term_sgd
+            new_variance_sgd = (1 - alpha) * moving_variance_sgd[
+                -1
+            ] + alpha * var_term_sgd
         moving_variance_sgd.append(new_variance_sgd)
-        
+
         if step % test_every_x_steps == 0:
             # torch.save(network.state_dict(), weights_folder / f"weights_{step}.pt")
             test_loss = test(network, test_loader, criterion, device)
@@ -176,7 +193,7 @@ for run_id in range(num_runs):
     optimizer = SVRG(
         network.parameters(),
         lr=learning_rate,
-        weight_decay=0, #0.0001,
+        weight_decay=0,  # 0.0001,
         snapshot_rand=True,
         prob_snapshot=2 / test_every_x_steps,
         steps_per_snapshot=10,  # TODO: put the right thing here
@@ -219,7 +236,7 @@ for run_id in range(num_runs):
                 "variances_sgd": moving_variance_sgd,
                 "snap_distances": snap_distances,
                 "distances": distances,
-                "stoch_loss": stoch_loss
+                "stoch_loss": stoch_loss,
             },
             f,
         )

@@ -81,18 +81,33 @@ def train(
     snapshot_steps = []
 
     for step in tqdm(range(num_steps)):
-        (
-            train_loss,
-            took_snapshot,
-            index,
-            variance_term,
-            grad_term,
-            snap_dist,
-            dist,
-            sgd_step,
-        ) = train_step(
-            network, train_loader_iterator, device, optimizer, criterion, step
-        )
+        try:
+            (
+                train_loss,
+                took_snapshot,
+                index,
+                variance_term,
+                grad_term,
+                snap_dist,
+                dist,
+                sgd_step,
+            ) = train_step(
+                network, train_loader_iterator, device, optimizer, criterion, step
+            )
+        except StopIteration:
+            train_loader_iterator = iter(train_loader)
+            (
+                train_loss,
+                took_snapshot,
+                index,
+                variance_term,
+                grad_term,
+                snap_dist,
+                dist,
+                sgd_step,
+            ) = train_step(
+                network, train_loader_iterator, device, optimizer, criterion, step
+            )
 
         # append
         if took_snapshot:
