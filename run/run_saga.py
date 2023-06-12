@@ -234,7 +234,7 @@ for run_id in range(num_runs):
     optimizer = SAGA(
         network.parameters(),
         lr=learning_rate,
-        prob=1,
+        prob=2 / test_every_x_steps,
         nns=network_temp,
         loss_func=criterion,
         device=device,
