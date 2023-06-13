@@ -2,10 +2,11 @@ import pickle
 import torch
 from pathlib import Path
 
-to_float = lambda x: x.item() if torch.is_tensor(x) else x
+to_float = lambda x: x.item() if torch.is_tensor(x) and x.shape == torch.Size([]) else x
+unpack = lambda x: (x[0][0], to_float(x[0][1])) if type(x[0]) == tuple and len(x[0]) == 2 else (x[1], to_float(x[0]))
 
 num_runs = 5
-experiment = "svrg_runs_bs128_lr1e-02"
+experiment = "saga_runs_bs1_lr1e-02"
 
 for run in range(num_runs):
     pickled_data = open(f"{experiment}/{run}/train_data.pkl", "rb")
@@ -13,7 +14,7 @@ for run in range(num_runs):
 
     conv_results = dict()
     for k in results.keys():
-          conv_results[k] = list(map(to_float, results[k]))
+          conv_results[k] = list(map(unpack, zip(results[k], list(range(len(results[k]))))))
 
     output_dir = Path(f"converted/{experiment}/{run}")
     output_dir.mkdir(exist_ok=True, parents=True)
