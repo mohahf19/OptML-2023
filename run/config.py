@@ -52,5 +52,5 @@ criterion = torch.nn.CrossEntropyLoss()
 NN = LeNet
 
 # make folder for logging
-output_dir = Path("output")
+output_dir = Path("output_dist")
 output_dir.mkdir(exist_ok=True, parents=True)

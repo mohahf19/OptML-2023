@@ -32,7 +32,6 @@ class SAGA(Optimizer):
         self.num_parts = num_parts
         self.assignment = assignment
         self.train_partitions = train_partitions
-        self.params_snap = []
 
         self.prev_snapshot = [False for _ in range(num_parts)]
 
@@ -48,8 +47,7 @@ class SAGA(Optimizer):
         grad_term = []
         snap_dist = 0.0
         dist = 0.0
-        # print(self.prev_snapshot)
-        # print(part)
+        #print(self.prev_snapshot, part)
         if self.prev_snapshot[part]:
             var_red = self.variance_reduction_stoch_grad(x, y, part)
             for p, var_red_term in zip(self.params, var_red):
@@ -60,7 +58,7 @@ class SAGA(Optimizer):
                 update = p.grad - var_red_term
                 p.data = p.data - self.lr * update
 
-            for p, p_snap, p_old in zip(self.params, self.params_snap, params_old):
+            for p, p_snap, p_old in zip(self.params, self.nns[part].parameters(), params_old):
                 snap_dist += (p.data - p_snap.data).norm()
                 dist += (p.data - p_old.data).norm()
         else:
@@ -103,7 +101,7 @@ class SAGA(Optimizer):
         return grad_list
 
     def take_snapshot(self, part):
-        print("Taking snapshot..")
+        #print("Taking snapshot..")
         init_avg = True if len(self.grad_sum) == 0 else False
         for p in self.nns[part].parameters():
             p.grad = None
