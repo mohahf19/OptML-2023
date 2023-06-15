@@ -77,3 +77,13 @@ class CNN150(nn.Module):
         x = self.fc2(x)
         x = self.fc3(x)
         return x
+
+class Linear(torch.nn.Module):
+    def __init__(self, output_dim = 10):
+        super(Linear, self).__init__()
+        self.linear = torch.nn.Linear(1024, output_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.flatten(x, start_dim=1)
+        x = self.linear(x)
+        return x

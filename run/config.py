@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from nns import LeNet
+from nns import *
 
 import datasets
 
@@ -49,8 +49,8 @@ batch_size = args.batch_size
 criterion = torch.nn.CrossEntropyLoss()
 
 # neural network class
-NN = LeNet
+NN = Linear
 
 # make folder for logging
-output_dir = Path("output_dist")
+output_dir = Path("output")
 output_dir.mkdir(exist_ok=True, parents=True)
