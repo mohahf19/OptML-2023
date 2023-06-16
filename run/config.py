@@ -17,13 +17,14 @@ np.random.seed(seed)
 # get train and test dataset
 train_dataset, test_dataset = datasets.get_mnist_data()
 
+# get parameters from command line
 parser = argparse.ArgumentParser()
 parser.add_argument("--num-steps", type=int, default=200)
 parser.add_argument("--device", type=str, default="cpu")
 parser.add_argument("--test-every-x-steps", type=int, default=20)
 parser.add_argument("--num-runs", type=int, default=5)
 parser.add_argument("--seed", type=int, default=41)
-parser.add_argument("--num-parts", type=int, default=10)  # clustered saga
+parser.add_argument("--num-parts", type=int, default=10)  # clustered saga only
 parser.add_argument("--batch-size", type=int, default=128)
 parser.add_argument("--lr", type=float, default=0.01)
 
@@ -49,7 +50,7 @@ batch_size = args.batch_size
 criterion = torch.nn.CrossEntropyLoss()
 
 # neural network class
-NN = Linear
+NN = LeNet
 
 # make folder for logging
 output_dir = Path("output")
