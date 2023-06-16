@@ -28,7 +28,7 @@ options:
 For testing, it is recommended to run with the following command:
 
 ```
-python run/run_sgd.py --num_steps 200 --device mps --test-every-x-steps 10 --num-runs 2
+python run/run_sgd.py --num-steps 200 --device mps --test-every-x-steps 10 --num-runs 2
 ```
 
 For the `sgd` and `svrg` runs, we run the following commands:
