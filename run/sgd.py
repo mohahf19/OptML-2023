@@ -6,6 +6,8 @@ from torch.optim.optimizer import Optimizer, required
 
 
 class SGD(Optimizer):
+    """Implements SGD algorithm."""
+
     def __init__(
         self,
         params,
@@ -38,7 +40,13 @@ class SGD(Optimizer):
     def __setstate__(self, state):
         super().__setstate__(state)
 
-    def step(self, step, closure=None) -> bool:
+    def step(self, step, closure=None):
+        """Does one step of SGD.
+
+        Args:
+            step: current step number
+            closure: function to evaluate loss. Defaults to None.
+        """
         grad_term = []
         dist = 0.0
 

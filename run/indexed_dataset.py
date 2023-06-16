@@ -1,7 +1,9 @@
 from torch.utils.data import Dataset
 
-# a Dataset that returns a batch of data with their indices
+
 class IndexedDataset(Dataset):
+    """A Dataset that returns a batch of data with their indices"""
+
     def __init__(self, dataset: Dataset):
         self.dataset = dataset
         self.targets = dataset.targets

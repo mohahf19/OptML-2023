@@ -1,9 +1,10 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
-# LeNet5 of Lecun et al.
+
 class LeNet(nn.Module):
+    """LeNet5 of Lecun et al."""
 
     def __init__(self, normbatch: bool = False, num_channels: int = 1):
         super(LeNet, self).__init__()
@@ -28,13 +29,13 @@ class LeNet(nn.Module):
         x = self.conv1(x)
         if self.normbatch:
             x = self.bn1(x)
-        x = nonlinearity (x)
+        x = nonlinearity(x)
         x = self.pool(x)
 
         x = self.conv2(x)
         if self.normbatch:
             x = self.bn2(x)
-        x = nonlinearity (x)
+        x = nonlinearity(x)
         x = self.pool(x)
 
         x = x.view(-1, 16 * 5 * 5)
@@ -42,17 +43,19 @@ class LeNet(nn.Module):
 
         if self.normbatch:
             x = self.bn3(x)
-        x = nonlinearity (x)
+        x = nonlinearity(x)
         x = self.fc2(x)
 
         if self.normbatch:
             x = self.bn4(x)
-        x = nonlinearity (x)
+        x = nonlinearity(x)
         x = self.fc3(x)
         return x
 
-# a CNN with ~150k parameters
+
 class CNN150(nn.Module):
+    """A CNN network with ~150k parameters"""
+
     def __init__(self, num_classes: int = 10, num_channels: int = 3):
         super().__init__()
         self.conv1 = nn.Sequential(
@@ -78,8 +81,11 @@ class CNN150(nn.Module):
         x = self.fc3(x)
         return x
 
+
 class Linear(torch.nn.Module):
-    def __init__(self, output_dim = 10):
+    """A linear network"""
+
+    def __init__(self, output_dim=10):
         super(Linear, self).__init__()
         self.linear = torch.nn.Linear(1024, output_dim)
 

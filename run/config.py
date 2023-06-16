@@ -1,11 +1,10 @@
 import argparse
 from pathlib import Path
 
+import datasets
 import numpy as np
 import torch
-from nns import *
-
-import datasets
+from nns import LeNet
 
 # set reproducible randomness
 seed = 41

@@ -24,8 +24,8 @@ batch_size_full_grads = 512
 print(f"Training with SGD (gamma = {learning_rate})")
 
 
-## Define the training methods
 def train_step(network, train_loader_iterator, device, optimizer, criterion, step):
+    """Does one step of training"""
     network.train()
     data, target, index = next(train_loader_iterator)
 
@@ -49,6 +49,20 @@ def train(
     test_loader,
     weights_folder,
 ):
+    """Runs the training loop for num_steps.
+
+    Args:
+        network: The network to train
+        train_loader: The training data loader
+        device: The device to train on
+        optimizer: The optimizer to use
+        criterion: The loss function
+        num_steps: The number of steps to train for
+        test_every_x_steps: Test the model every x steps
+        test_loader: The test data loader
+        weights_folder: The folder to save the weights to
+    """
+
     train_loader_iterator = iter(train_loader)
     train_losses = []
     stoch_loss = []

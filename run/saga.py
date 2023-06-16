@@ -6,6 +6,8 @@ from torch.optim.optimizer import Optimizer, required
 
 
 class SAGA(Optimizer):
+    """Implements SAGA algorithm."""
+
     def __init__(
         self,
         params,
@@ -38,7 +40,15 @@ class SAGA(Optimizer):
     def __setstate__(self, state):
         super().__setstate__(state)
 
-    def step(self, x, y, i, closure=None) -> bool:
+    def step(self, x, y, i, closure=None):
+        """Does one step of SAGA.
+
+        Args:
+            x (torch.Tensor): input data
+            y (torch.Tensor): target data
+            i (int): index of data point
+            closure (function, optional): closure. Defaults to None.
+        """
         part = self.assignment[i]
         flag = False
         params_old = []
@@ -47,7 +57,7 @@ class SAGA(Optimizer):
         grad_term = []
         snap_dist = 0.0
         dist = 0.0
-        #print(self.prev_snapshot, part)
+        # print(self.prev_snapshot, part)
         if self.prev_snapshot[part]:
             var_red = self.variance_reduction_stoch_grad(x, y, part)
             for p, var_red_term in zip(self.params, var_red):
@@ -58,7 +68,9 @@ class SAGA(Optimizer):
                 update = p.grad - var_red_term
                 p.data = p.data - self.lr * update
 
-            for p, p_snap, p_old in zip(self.params, self.nns[part].parameters(), params_old):
+            for p, p_snap, p_old in zip(
+                self.params, self.nns[part].parameters(), params_old
+            ):
                 snap_dist += (p.data - p_snap.data).norm()
                 dist += (p.data - p_old.data).norm()
         else:
@@ -85,6 +97,7 @@ class SAGA(Optimizer):
         return flag, variance_term, grad_term, snap_dist, dist, sgd_step
 
     def variance_reduction_stoch_grad(self, x, y, part):
+        """Computes variance reduction term for stochastic gradient."""
         # zeroing the gradients
         for p in self.nns[part].parameters():
             p.grad = None
@@ -101,7 +114,8 @@ class SAGA(Optimizer):
         return grad_list
 
     def take_snapshot(self, part):
-        #print("Taking snapshot..")
+        """Takes snapshot of the current neural network."""
+        # print("Taking snapshot..")
         init_avg = True if len(self.grad_sum) == 0 else False
         for p in self.nns[part].parameters():
             p.grad = None
